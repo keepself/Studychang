@@ -20,8 +20,7 @@ public class Post {
     @Column(nullable = false, length = 50)
     private String title;
 
-    @Column(nullable = false, length = 30000)
-    private String contents;
+    @Column(columnDefinition = "LONGTEXT")    private String contents;
 
     @Column
     private String fileName;
@@ -34,6 +33,14 @@ public class Post {
 
     @Builder.Default
     private Boolean delYN = false;
+
+    @Column(nullable = false)
+    private String category;
+
+    @Column
+    private String imageUrl;  // 이미지 URL 필드 추가
+
+
 
     public void setImagePath(String filePath) {
         this.filePath = filePath;

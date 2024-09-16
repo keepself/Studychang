@@ -40,13 +40,12 @@ public class PostService {
         Post new_post = Post.builder()
                 .title(postCreateReqDto.getTitle())
                 .contents(postCreateReqDto.getContents())
+                .category(postCreateReqDto.getCategory())
                 .build();
-        System.out.println("3");
         if (multipartFile != null && !multipartFile.isEmpty()) {
             fileName = multipartFile.getOriginalFilename(); // 원본 파일 이름 가져오기
             String filePath = Paths.get(uploadDir, fileName).toString();
             File dest = new File(filePath);
-            System.out.println("4");
             // 파일 저장
             try {
                 Files.createDirectories(Paths.get(uploadDir)); // 디렉토리 생성
@@ -64,8 +63,8 @@ public class PostService {
         // 데이터베이스에 저장
         return postRepository.save(new_post);
     }
-    public Page<PostListResDto> findAll(Pageable pageable) {
-        return postRepository.findAllByDelYNOrderByCreatedAtDesc(false, pageable)
+    public Page<PostListResDto> findAll(String category,Boolean delYN,Pageable pageable) {
+        return postRepository.findAllByCategoryAndDelYNOrderByCreatedAtDesc(category,delYN,pageable)
                 .map(PostListResDto::mapToPost);
 
     }
@@ -123,6 +122,7 @@ public class PostService {
         return PostDetailRes.builder()
                 .title(post.getTitle())
                 .contents(post.getContents())
+                .category(post.getCategory())
                 .filePath(post.getFilePath())
                 .build();
     }

@@ -15,6 +15,7 @@ public class PostDetailRes {
 
     private String title;
     private String contents;
+    private String category;
     private String filePath;
     private LocalDateTime createdAt;
 
