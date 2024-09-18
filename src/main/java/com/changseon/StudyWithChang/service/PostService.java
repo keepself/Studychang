@@ -40,6 +40,7 @@ public class PostService {
         Post new_post = Post.builder()
                 .title(postCreateReqDto.getTitle())
                 .contents(postCreateReqDto.getContents())
+                .createdAt(postCreateReqDto.getCreatedAt())
                 .category(postCreateReqDto.getCategory())
                 .build();
         if (multipartFile != null && !multipartFile.isEmpty()) {
@@ -120,6 +121,7 @@ public class PostService {
     Post post = postRepository.findByPostId(postId).orElseThrow(()-> new EntityNotFoundException("해당하는 페이지가 존재하지 않습니다."));
 
         return PostDetailRes.builder()
+                .postId(post.getPostId())
                 .title(post.getTitle())
                 .contents(post.getContents())
                 .category(post.getCategory())

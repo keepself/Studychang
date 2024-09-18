@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class PostDetailRes {
 
+    private Long postId;
     private String title;
     private String contents;
     private String category;

@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Slf4j
 @RestController
@@ -31,15 +32,31 @@ public class PostController {
             @RequestPart("post") PostCreateReqDto postCreateReqDto,
             @RequestPart(value = "file", required = false) MultipartFile file) throws IOException {
 
-        log.info("Creating post with details: {}", postCreateReqDto);
-        if (file != null) {
-            log.info("File uploaded: {}", file.getOriginalFilename());
+        // createdAt 값이 null일 경우 현재 시간으로 설정
+        if (postCreateReqDto.getCreatedAt() == null) {
+            postCreateReqDto.setCreatedAt(LocalDateTime.now());
         }
 
+        log.info("Creating post with details: {}", postCreateReqDto);
+
+        // 파일이 존재할 경우 처리
+        if (file != null && !file.isEmpty()) {
+            log.info("File uploaded: {}", file.getOriginalFilename());
+        } else {
+            log.info("No file uploaded.");
+        }
+
+        // 포스트 생성 로직을 호출, 파일이 null일 때도 처리 가능하도록 변경
         Post createdPost = postService.PostCreate(postCreateReqDto, file);
-        log.info("File uploaded: {}", file.getOriginalFilename());
+
+        // 로그에 createdAt 값 출력
+        log.info("Post created with details: title={}, category={}, contents={}, createdAt={}",
+                createdPost.getTitle(), createdPost.getCategory(), createdPost.getContents(), createdPost.getCreatedAt());
+
         return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
     }
+
+
 
     @GetMapping("/list")
     public ResponseEntity<CommonResponse> postList(
