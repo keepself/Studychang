@@ -1,5 +1,6 @@
 package com.changseon.StudyWithChang.domain;
 
+import com.changseon.StudyWithChang.dto.PostUpdateReq;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -49,10 +50,10 @@ public class Post {
     public void deletePost() {
         this.delYN = true;
     }
-    public void updatePost(String title, String contents, String fileName)  {
-        this.title = title;
-        this.contents = contents;
-        this.fileName = fileName;
+    public void updatePost(PostUpdateReq postUpdateReq) {
+        this.title = postUpdateReq.getTitle();
+        this.category = postUpdateReq.getCategory();
+        this.contents = postUpdateReq.getContents();
     }
 
 }

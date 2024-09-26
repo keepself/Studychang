@@ -7,15 +7,24 @@ import com.changseon.StudyWithChang.dto.PostListResDto;
 import com.changseon.StudyWithChang.dto.PostUpdateReq;
 import com.changseon.StudyWithChang.global.common.CommonResponse;
 import com.changseon.StudyWithChang.service.PostService;
+
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.BitSet;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -27,34 +36,15 @@ public class PostController {
         this.postService = postService;
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<Post> createPost(
-            @RequestPart("post") PostCreateReqDto postCreateReqDto,
-            @RequestPart(value = "file", required = false) MultipartFile file) throws IOException {
+        @PostMapping("/create")
+        public ResponseEntity<Post> createPost( PostCreateReqDto postCreateReqDto ) throws IOException {
 
-        // createdAt 값이 null일 경우 현재 시간으로 설정
-        if (postCreateReqDto.getCreatedAt() == null) {
-            postCreateReqDto.setCreatedAt(LocalDateTime.now());
+            if (postCreateReqDto.getCreatedAt() == null) {
+                postCreateReqDto.setCreatedAt(LocalDateTime.now());
+            }
+            Post createdPost = postService.PostCreate(postCreateReqDto);
+            return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
         }
-
-        log.info("Creating post with details: {}", postCreateReqDto);
-
-        // 파일이 존재할 경우 처리
-        if (file != null && !file.isEmpty()) {
-            log.info("File uploaded: {}", file.getOriginalFilename());
-        } else {
-            log.info("No file uploaded.");
-        }
-
-        // 포스트 생성 로직을 호출, 파일이 null일 때도 처리 가능하도록 변경
-        Post createdPost = postService.PostCreate(postCreateReqDto, file);
-
-        // 로그에 createdAt 값 출력
-        log.info("Post created with details: title={}, category={}, contents={}, createdAt={}",
-                createdPost.getTitle(), createdPost.getCategory(), createdPost.getContents(), createdPost.getCreatedAt());
-
-        return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
-    }
 
 
 
@@ -81,24 +71,35 @@ public class PostController {
     }
 
     @PatchMapping("/update/{postId}")
-    public ResponseEntity<CommonResponse> updatePost(@PathVariable("postId") long postId,
-                                                     @RequestPart("post") PostUpdateReq postUpdateReq,
-                                                     @RequestPart(name = "file", required = false) MultipartFile multipartFile) throws IOException {
+    public ResponseEntity<CommonResponse> updatePost(@PathVariable("postId") long postId,PostUpdateReq postUpdateReq)
+            throws IOException {
+        log.info("kkkk" +postUpdateReq.getContents());
 
-        log.info("Updating post with ID: {}", postId);
-        log.info("Post update details: {}", postUpdateReq);
-        if (multipartFile != null) {
-            log.info("File uploaded: {}", multipartFile.getOriginalFilename());
-        }
-
-        postService.PostUpdate(postId, postUpdateReq, multipartFile);
-
+        postService.PostUpdate(postId, postUpdateReq);
         return new ResponseEntity<>(new CommonResponse("게시물 업데이트 완료", postId), HttpStatus.OK);
     }
 
     @GetMapping("/detail/{postId}")
     public ResponseEntity<CommonResponse> detailPost(@PathVariable("postId") long postId) {
         log.info("Fetching details for post ID: {}", postId);
-        return new ResponseEntity<>(new CommonResponse("디테일페이지 성공", postService.PostDetail(postId)), HttpStatus.OK);
+
+        // 게시물 상세 정보를 가져옵니다.
+        PostDetailRes postDetail = postService.PostDetail(postId);
+
+        // postId가 존재할 경우 "업데이트 불러오기 성공" 메시지를 반환합니다.
+        if (postDetail != null) {
+            return new ResponseEntity<>(new CommonResponse("업데이트 불러오기 성공", postDetail), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new CommonResponse("존재하지 않는 게시물입니다.", null), HttpStatus.NOT_FOUND);
+        }
+    }
+
+
+    @GetMapping(value = "/image/{imagename}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<Resource> getItem(@PathVariable("imagename") String imagename){
+        Resource resource = postService.getImage(imagename);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.IMAGE_JPEG);
+        return new ResponseEntity<>(resource, httpHeaders, HttpStatus.OK);
     }
 }
